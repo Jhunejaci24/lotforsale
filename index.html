@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOT FOR SALE TRACKER</title>
+<style>
+  body { font-family: Arial, sans-serif; margin:12px; background: linear-gradient(to right,#e0f7fa,#f1f8e9); }
+  h2 { text-align:center; color:#2e7d32; }
+  .box { background:#fff; padding:14px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin:12px auto; max-width:980px; }
+  input, button { padding:10px; margin:6px 0; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; }
+  .row input, .row button { flex:1; }
+  .row button { border:none; cursor:pointer; border-radius:6px; }
+  button.primary { background:#2e7d32; color:white; }
+  button.warn { background:#d84315; color:white; }
+  button.orange { background:#f57f17; color:white; }
+  button:hover { opacity:0.85; }
+  .record-card { background:#f9f9f9; padding:12px; border-radius:6px; margin-bottom:12px; border:1px solid #ccc; }
+  .small { font-size:13px; color:#555; }
+
+  /* 📱 Mobile view adjustments */
+  @media(max-width:768px){
+    .row { flex-direction:column; }
+    input, button { font-size:16px; }
+    .record-card { font-size:15px; }
+  }
+</style>
+</head>
+<body>
+
+<h2>📂 LOT FOR SALE TRACKER</h2>
+
+<div id="appBox" class="box">
+  <!-- FORM -->
+  <form id="trackerForm" style="margin-top:12px;">
+    <input type="hidden" id="editIndex">
+    <div class="row">
+      <input id="ownerName" placeholder="Name of Owner" required>
+      <input id="agentName" placeholder="Name of Agent" required>
+    </div>
+    <div class="row">
+      <input id="sqm" placeholder="SQM" required>
+      <input id="lotDesc" placeholder="Lot Description">
+    </div>
+    <div class="row">
+      <input id="lotPrice" placeholder="Lot Price">
+      <input id="lotAddress" placeholder="Lot Address">
+    </div>
+    <div class="row">
+      <input id="commission" placeholder="Commission">
+      <input id="cellphone" placeholder="Cellphone Number">
+    </div>
+    <div class="row">
+      <input id="messenger" placeholder="Messenger">
+      <input id="remarks" placeholder="Remarks">
+    </div>
+    <div style="margin-top:8px;">
+      <button class="primary" type="submit">Save Record</button>
+    </div>
+  </form>
+
+  <!-- FILTER -->
+  <div style="margin-top:8px" class="small">
+    <label>🔎 Search</label>
+    <input id="searchBox" placeholder="Search lot details...">
+  </div>
+
+  <!-- ACTIVE RECORDS -->
+  <h4 style="margin-top:12px">📋 Active Records</h4>
+  <div id="activeList"></div>
+
+  <!-- ARCHIVED RECORDS -->
+  <h4 style="margin-top:12px">🗄 Archived Records</h4>
+  <div id="archivedList"></div>
+</div>
+
+<script>
+let records = [], archived = [];
+
+function saveAll(){ 
+  localStorage.setItem('records',JSON.stringify(records));
+  localStorage.setItem('archived',JSON.stringify(archived));
+}
+function loadAll(){
+  records = JSON.parse(localStorage.getItem('records')||'[]');
+  archived = JSON.parse(localStorage.getItem('archived')||'[]');
+}
+
+function renderActive(arr){
+  const activeList=document.getElementById('activeList');
+  activeList.innerHTML='';
+  arr.forEach((r,i)=>{
+    const div=document.createElement('div'); div.className='record-card';
+    div.innerHTML=`<p><b>Name of Owner:</b> ${r.ownerName||''}</p>
+                   <p><b>Name of Agent:</b> ${r.agentName||''}</p>
+                   <p><b>SQM:</b> ${r.sqm||''}</p>
+                   <p><b>Lot Description:</b> ${r.lotDesc||''}</p>
+                   <p><b>Lot Price:</b> ${r.lotPrice||''}</p>
+                   <p><b>Lot Address:</b> ${r.lotAddress||''}</p>
+                   <p><b>Commission:</b> ${r.commission||''}</p>
+                   <p><b>Cellphone:</b> ${r.cellphone||''}</p>
+                   <p><b>Messenger:</b> ${r.messenger||''}</p>
+                   <p><b>Remarks:</b> ${r.remarks||''}</p>
+                   <div class="row">
+                     <button class="primary" onclick="editRecord(${i})">Edit</button>
+                     <button class="warn" onclick="deleteRecord(${i})">Delete</button>
+                     <button class="orange" onclick="archiveRecord(${i})">Archive</button>
+                     <button onclick="copyRecord(${i})">Copy</button>
+                   </div>`;
+    activeList.appendChild(div);
+  });
+}
+function renderArchived(arr){
+  const archivedList=document.getElementById('archivedList');
+  archivedList.innerHTML='';
+  arr.forEach((r,i)=>{
+    const div=document.createElement('div'); div.className='record-card';
+    div.innerHTML=`<p><b>Name of Owner:</b> ${r.ownerName||''}</p>
+                   <p><b>Name of Agent:</b> ${r.agentName||''}</p>
+                   <p><b>SQM:</b> ${r.sqm||''}</p>
+                   <p><b>Lot Description:</b> ${r.lotDesc||''}</p>
+                   <p><b>Lot Price:</b> ${r.lotPrice||''}</p>
+                   <p><b>Lot Address:</b> ${r.lotAddress||''}</p>
+                   <p><b>Commission:</b> ${r.commission||''}</p>
+                   <p><b>Cellphone:</b> ${r.cellphone||''}</p>
+                   <p><b>Messenger:</b> ${r.messenger||''}</p>
+                   <p><b>Remarks:</b> ${r.remarks||''}</p>
+                   <div class="row">
+                     <button class="primary" onclick="restoreRecord(${i})">Restore</button>
+                     <button class="warn" onclick="deleteArchived(${i})">Delete</button>
+                   </div>`;
+    archivedList.appendChild(div);
+  });
+}
+function renderAll(){ renderActive(records); renderArchived(archived); }
+
+/* --- form save --- */
+document.getElementById('trackerForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const rec={ 
+    ownerName:document.getElementById('ownerName').value,
+    agentName:document.getElementById('agentName').value,
+    sqm:document.getElementById('sqm').value,
+    lotDesc:document.getElementById('lotDesc').value,
+    lotPrice:document.getElementById('lotPrice').value,
+    lotAddress:document.getElementById('lotAddress').value,
+    commission:document.getElementById('commission').value,
+    cellphone:document.getElementById('cellphone').value,
+    messenger:document.getElementById('messenger').value,
+    remarks:document.getElementById('remarks').value
+  };
+  const idx=document.getElementById('editIndex').value;
+  if(idx===''){ records.push(rec); } else { records[idx]=rec; document.getElementById('editIndex').value=''; }
+  saveAll(); renderAll(); this.reset();
+});
+
+/* --- edit/delete/archive/restore --- */
+function editRecord(i){ 
+  const r=records[i];
+  document.getElementById('ownerName').value=r.ownerName;
+  document.getElementById('agentName').value=r.agentName;
+  document.getElementById('sqm').value=r.sqm;
+  document.getElementById('lotDesc').value=r.lotDesc;
+  document.getElementById('lotPrice').value=r.lotPrice;
+  document.getElementById('lotAddress').value=r.lotAddress;
+  document.getElementById('commission').value=r.commission;
+  document.getElementById('cellphone').value=r.cellphone;
+  document.getElementById('messenger').value=r.messenger;
+  document.getElementById('remarks').value=r.remarks;
+  document.getElementById('editIndex').value=i;
+}
+function deleteRecord(i){ if(confirm('Delete this record?')){ records.splice(i,1); saveAll(); renderAll(); } }
+function archiveRecord(i){ const rec=records.splice(i,1)[0]; archived.push(rec); saveAll(); renderAll(); }
+function restoreRecord(i){ const rec=archived.splice(i,1)[0]; records.push(rec); saveAll(); renderAll(); }
+function deleteArchived(i){ if(confirm('Delete archived record?')){ archived.splice(i,1); saveAll(); renderAll(); } }
+
+/* --- copy record --- */
+function copyRecord(i){
+  const r=records[i];
+  const text=`SQM: ${r.sqm}
+Lot Description: ${r.lotDesc}
+Lot Price: ${r.lotPrice}
+Lot Address: ${r.lotAddress}
+Remarks: ${r.remarks}`;
+  navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard'));
+}
+
+/* --- search filter --- */
+document.getElementById('searchBox').addEventListener('input', function(){
+  const term = this.value.toLowerCase();
+  const filtered = records.filter(r =>
+    (r.ownerName||'').toLowerCase().includes(term) ||
+    (r.agentName||'').toLowerCase().includes(term) ||
+    (r.sqm||'').toLowerCase().includes(term) ||
+    (r.lotDesc||'').toLowerCase().includes(term) ||
+    (r.lotPrice||'').toLowerCase().includes(term) ||
+    (r.lotAddress||'').toLowerCase().includes(term) ||
+    (r.commission||'').toLowerCase().includes(term) ||
+    (r.cellphone||'').toLowerCase().includes(term) ||
+    (r.messenger||'').toLowerCase().includes(term) ||
+    (r.remarks||'').toLowerCase().includes(term)
+  );
+  renderActive(filtered);
+});
+
+/* --- bootstrap --- */
+loadAll(); renderAll();
+</script>
+</body>
+</html>
