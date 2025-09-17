@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>LOT FOR SALE TRACKER</title>
 <style>
   body { font-family: Arial, sans-serif; margin:12px; background: linear-gradient(to right,#e0f7fa,#f1f8e9); }
@@ -15,25 +15,53 @@
   button.primary { background:#2e7d32; color:white; }
   button.warn { background:#d84315; color:white; }
   button.orange { background:#f57f17; color:white; }
+  button.small-btn { padding:6px 8px; font-size:12px; width:auto; }
   button:hover { opacity:0.85; }
   .record-card { background:#f9f9f9; padding:12px; border-radius:6px; margin-bottom:12px; border:1px solid #ccc; }
   .small { font-size:13px; color:#555; }
+
+  /* form flash highlight */
+  #trackerForm { margin-top:12px; display:none; transition: box-shadow .2s ease; border-radius:8px; padding:10px; }
+  .flash { animation: flash 900ms ease; }
+  @keyframes flash {
+    0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); }
+    40% { box-shadow: 0 0 12px 6px rgba(46,125,50,0.20); }
+    100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); }
+  }
+
+  /* action buttons container */
+  .actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
 
   /* 📱 Mobile view adjustments */
   @media(max-width:768px){
     .row { flex-direction:column; }
     input, button { font-size:16px; }
     .record-card { font-size:15px; }
+    .actions { display:flex; gap:6px; }
+    .actions button { flex:1; font-size:13px; padding:8px; }
   }
+.dev {
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 14px;
+  font-style: italic;
+}
+
 </style>
 </head>
 <body>
 
 <h2>📂 LOT FOR SALE TRACKER</h2>
+<div class="dev">&copy; 2025 — Developed by <b>ROMULO J. JACINTO JR</b></div>
 
 <div id="appBox" class="box">
+
+  <!-- Toggle Button -->
+  <button id="toggleFormBtn" class="primary" style="margin-bottom:10px;">➕ Add Record</button>
+
   <!-- FORM -->
-  <form id="trackerForm" style="margin-top:12px;">
+  <form id="trackerForm">
     <input type="hidden" id="editIndex">
     <div class="row">
       <input id="ownerName" placeholder="Name of Owner" required>
@@ -56,7 +84,7 @@
       <input id="remarks" placeholder="Remarks">
     </div>
     <div style="margin-top:8px;">
-      <button class="primary" type="submit">Save Record</button>
+      <button class="primary" type="submit">💾 Save Record</button>
     </div>
   </form>
 
@@ -93,7 +121,7 @@ function renderActive(arr){
   const activeList=document.getElementById('activeList');
   activeList.innerHTML='';
   arr.forEach((r)=>{
-    const realIndex = records.indexOf(r); // get actual index from master list
+    const realIndex = records.indexOf(r); 
     const div=document.createElement('div'); div.className='record-card';
     div.innerHTML=`<p><b>Name of Owner:</b> ${r.ownerName||''}</p>
                    <p><b>Name of Agent:</b> ${r.agentName||''}</p>
@@ -105,11 +133,11 @@ function renderActive(arr){
                    <p><b>Cellphone:</b> ${r.cellphone||''}</p>
                    <p><b>Messenger:</b> ${r.messenger||''}</p>
                    <p><b>Remarks:</b> ${r.remarks||''}</p>
-                   <div class="row">
-                     <button class="primary" onclick="editRecord(${realIndex})">Edit</button>
-                     <button class="warn" onclick="deleteRecord(${realIndex})">Delete</button>
-                     <button class="orange" onclick="archiveRecord(${realIndex})">Archive</button>
-                     <button onclick="copyRecord(${realIndex})">Copy</button>
+                   <div class="actions">
+                     <button class="primary small-btn" onclick="editRecord(${realIndex})" aria-label="Edit">✏️</button>
+                     <button class="warn small-btn" onclick="deleteRecord(${realIndex})" aria-label="Delete">🗑️</button>
+                     <button class="orange small-btn" onclick="archiveRecord(${realIndex})" aria-label="Archive">📦</button>
+                     <button class="small-btn" onclick="copyRecord(${realIndex})" aria-label="Copy">📋</button>
                    </div>`;
     activeList.appendChild(div);
   });
@@ -131,9 +159,9 @@ function renderArchived(arr){
                    <p><b>Cellphone:</b> ${r.cellphone||''}</p>
                    <p><b>Messenger:</b> ${r.messenger||''}</p>
                    <p><b>Remarks:</b> ${r.remarks||''}</p>
-                   <div class="row">
-                     <button class="primary" onclick="restoreRecord(${i})">Restore</button>
-                     <button class="warn" onclick="deleteArchived(${i})">Delete</button>
+                   <div class="actions">
+                     <button class="primary small-btn" onclick="restoreRecord(${i})">↩️</button>
+                     <button class="warn small-btn" onclick="deleteArchived(${i})">🗑️</button>
                    </div>`;
     archivedList.appendChild(div);
   });
@@ -157,12 +185,16 @@ document.getElementById('trackerForm').addEventListener('submit',function(e){
   };
   const idx=document.getElementById('editIndex').value;
   if(idx===''){ records.push(rec); } else { records[idx]=rec; document.getElementById('editIndex').value=''; }
-  saveAll(); renderAll(); this.reset();
+  saveAll(); renderAll(); this.reset(); 
+  document.getElementById('trackerForm').style.display='none';
+  document.getElementById('toggleFormBtn').textContent='➕ Add Record';
 });
 
 /* --- Edit/Delete/Archive/Restore --- */
 function editRecord(i){ 
   const r=records[i];
+  if(!r) return alert('Record not found');
+  // populate form fields
   document.getElementById('ownerName').value=r.ownerName;
   document.getElementById('agentName').value=r.agentName;
   document.getElementById('sqm').value=r.sqm;
@@ -174,6 +206,24 @@ function editRecord(i){
   document.getElementById('messenger').value=r.messenger;
   document.getElementById('remarks').value=r.remarks;
   document.getElementById('editIndex').value=i;
+
+  // show form and update toggle text
+  const form = document.getElementById('trackerForm');
+  form.style.display='block';
+  document.getElementById('toggleFormBtn').textContent='➖ Hide Form';
+
+  // scroll to the form and focus the first input, plus a quick flash so user sees it immediately
+  // scroll
+  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // focus (slight delay helps on some mobile browsers)
+  setTimeout(()=> {
+    document.getElementById('ownerName').focus();
+    // trigger flash animation
+    form.classList.remove('flash');
+    // force reflow to restart animation
+    void form.offsetWidth;
+    form.classList.add('flash');
+  }, 120);
 }
 function deleteRecord(i){ if(confirm('Delete this record?')){ records.splice(i,1); saveAll(); renderAll(); } }
 function archiveRecord(i){ const rec=records.splice(i,1)[0]; archived.push(rec); saveAll(); renderAll(); }
@@ -210,8 +260,25 @@ document.getElementById('searchBox').addEventListener('input', function(){
   renderActive(filtered);
 });
 
+/* --- Toggle Form --- */
+document.getElementById('toggleFormBtn').addEventListener('click', function(){
+  const form=document.getElementById('trackerForm');
+  if(form.style.display==='none' || form.style.display===''){
+    form.style.display='block';
+    this.textContent='➖ Hide Form';
+    // optional: scroll to form when toggled open
+    setTimeout(()=> form.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+  } else {
+    form.style.display='none';
+    this.textContent='➕ Add Record';
+  }
+});
+
 /* --- Bootstrap --- */
-loadAll(); renderAll();
+loadAll();
+renderAll();
+// keep form hidden on initial load
+document.getElementById('trackerForm').style.display='none';
 </script>
 </body>
 </html>
