@@ -19,20 +19,10 @@
   button:hover { opacity:0.85; }
   .record-card { background:#f9f9f9; padding:12px; border-radius:6px; margin-bottom:12px; border:1px solid #ccc; }
   .small { font-size:13px; color:#555; }
-
-  /* form flash highlight */
   #trackerForm { margin-top:12px; display:none; transition: box-shadow .2s ease; border-radius:8px; padding:10px; }
   .flash { animation: flash 900ms ease; }
-  @keyframes flash {
-    0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); }
-    40% { box-shadow: 0 0 12px 6px rgba(46,125,50,0.20); }
-    100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); }
-  }
-
-  /* action buttons container */
+  @keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); } 40% { box-shadow: 0 0 12px 6px rgba(46,125,50,0.20); } 100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); } }
   .actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-
-  /* 📱 Mobile view adjustments */
   @media(max-width:768px){
     .row { flex-direction:column; }
     input, button { font-size:16px; }
@@ -40,14 +30,7 @@
     .actions { display:flex; gap:6px; }
     .actions button { flex:1; font-size:13px; padding:8px; }
   }
-.dev {
-  text-align: center;
-  font-size: 11px;
-  color: #555;
-  margin-bottom: 14px;
-  font-style: italic;
-}
-
+  .dev { text-align: center; font-size: 11px; color: #555; margin-bottom: 14px; font-style: italic; }
 </style>
 </head>
 <body>
@@ -82,6 +65,10 @@
     <div class="row">
       <input id="messenger" placeholder="Messenger">
       <input id="remarks" placeholder="Remarks">
+    </div>
+    <div class="row">
+      <input type="file" id="lotImages" accept="image/*" multiple>
+      <small>Select up to 3 images</small>
     </div>
     <div style="margin-top:8px;">
       <button class="primary" type="submit">💾 Save Record</button>
@@ -123,22 +110,24 @@ function renderActive(arr){
   arr.forEach((r)=>{
     const realIndex = records.indexOf(r); 
     const div=document.createElement('div'); div.className='record-card';
-    div.innerHTML=`<p><b>Name of Owner:</b> ${r.ownerName||''}</p>
-                   <p><b>Name of Agent:</b> ${r.agentName||''}</p>
-                   <p><b>SQM:</b> ${r.sqm||''}</p>
-                   <p><b>Lot Description:</b> ${r.lotDesc||''}</p>
-                   <p><b>Lot Price:</b> ${r.lotPrice||''}</p>
-                   <p><b>Lot Address:</b> ${r.lotAddress||''}</p>
-                   <p><b>Commission:</b> ${r.commission||''}</p>
-                   <p><b>Cellphone:</b> ${r.cellphone||''}</p>
-                   <p><b>Messenger:</b> ${r.messenger||''}</p>
-                   <p><b>Remarks:</b> ${r.remarks||''}</p>
-                   <div class="actions">
-                     <button class="primary small-btn" onclick="editRecord(${realIndex})" aria-label="Edit">✏️</button>
-                     <button class="warn small-btn" onclick="deleteRecord(${realIndex})" aria-label="Delete">🗑️</button>
-                     <button class="orange small-btn" onclick="archiveRecord(${realIndex})" aria-label="Archive">📦</button>
-                     <button class="small-btn" onclick="copyRecord(${realIndex})" aria-label="Copy">📋</button>
-                   </div>`;
+    div.innerHTML=`
+      <p><b>Name of Owner:</b> ${r.ownerName||''}</p>
+      <p><b>Name of Agent:</b> ${r.agentName||''}</p>
+      <p><b>SQM:</b> ${r.sqm||''}</p>
+      <p><b>Lot Description:</b> ${r.lotDesc||''}</p>
+      <p><b>Lot Price:</b> ${r.lotPrice||''}</p>
+      <p><b>Lot Address:</b> ${r.lotAddress||''}</p>
+      <p><b>Commission:</b> ${r.commission||''}</p>
+      <p><b>Cellphone:</b> ${r.cellphone||''}</p>
+      <p><b>Messenger:</b> ${r.messenger||''}</p>
+      <p><b>Remarks:</b> ${r.remarks||''}</p>
+      <div class="actions">
+        <button class="primary small-btn" onclick="editRecord(${realIndex})" aria-label="Edit">✏️</button>
+        <button class="warn small-btn" onclick="deleteRecord(${realIndex})" aria-label="Delete">🗑️</button>
+        <button class="orange small-btn" onclick="archiveRecord(${realIndex})" aria-label="Archive">📦</button>
+        <button class="small-btn" onclick="copyRecord(${realIndex})" aria-label="Copy">📋</button>
+        <button class="small-btn" onclick="previewPictures(${realIndex})" aria-label="Preview">👁️</button>
+      </div>`;
     activeList.appendChild(div);
   });
 }
@@ -149,20 +138,21 @@ function renderArchived(arr){
   archivedList.innerHTML='';
   arr.forEach((r,i)=>{
     const div=document.createElement('div'); div.className='record-card';
-    div.innerHTML=`<p><b>Name of Owner:</b> ${r.ownerName||''}</p>
-                   <p><b>Name of Agent:</b> ${r.agentName||''}</p>
-                   <p><b>SQM:</b> ${r.sqm||''}</p>
-                   <p><b>Lot Description:</b> ${r.lotDesc||''}</p>
-                   <p><b>Lot Price:</b> ${r.lotPrice||''}</p>
-                   <p><b>Lot Address:</b> ${r.lotAddress||''}</p>
-                   <p><b>Commission:</b> ${r.commission||''}</p>
-                   <p><b>Cellphone:</b> ${r.cellphone||''}</p>
-                   <p><b>Messenger:</b> ${r.messenger||''}</p>
-                   <p><b>Remarks:</b> ${r.remarks||''}</p>
-                   <div class="actions">
-                     <button class="primary small-btn" onclick="restoreRecord(${i})">↩️</button>
-                     <button class="warn small-btn" onclick="deleteArchived(${i})">🗑️</button>
-                   </div>`;
+    div.innerHTML=`
+      <p><b>Name of Owner:</b> ${r.ownerName||''}</p>
+      <p><b>Name of Agent:</b> ${r.agentName||''}</p>
+      <p><b>SQM:</b> ${r.sqm||''}</p>
+      <p><b>Lot Description:</b> ${r.lotDesc||''}</p>
+      <p><b>Lot Price:</b> ${r.lotPrice||''}</p>
+      <p><b>Lot Address:</b> ${r.lotAddress||''}</p>
+      <p><b>Commission:</b> ${r.commission||''}</p>
+      <p><b>Cellphone:</b> ${r.cellphone||''}</p>
+      <p><b>Messenger:</b> ${r.messenger||''}</p>
+      <p><b>Remarks:</b> ${r.remarks||''}</p>
+      <div class="actions">
+        <button class="primary small-btn" onclick="restoreRecord(${i})">↩️</button>
+        <button class="warn small-btn" onclick="deleteArchived(${i})">🗑️</button>
+      </div>`;
     archivedList.appendChild(div);
   });
 }
@@ -171,30 +161,60 @@ function renderAll(){ renderActive(records); renderArchived(archived); }
 /* --- Form Save --- */
 document.getElementById('trackerForm').addEventListener('submit',function(e){
   e.preventDefault();
-  const rec={ 
-    ownerName:document.getElementById('ownerName').value,
-    agentName:document.getElementById('agentName').value,
-    sqm:document.getElementById('sqm').value,
-    lotDesc:document.getElementById('lotDesc').value,
-    lotPrice:document.getElementById('lotPrice').value,
-    lotAddress:document.getElementById('lotAddress').value,
-    commission:document.getElementById('commission').value,
-    cellphone:document.getElementById('cellphone').value,
-    messenger:document.getElementById('messenger').value,
-    remarks:document.getElementById('remarks').value
+  const fileInput = document.getElementById('lotImages');
+  const rec = {
+    ownerName: document.getElementById('ownerName').value,
+    agentName: document.getElementById('agentName').value,
+    sqm: document.getElementById('sqm').value,
+    lotDesc: document.getElementById('lotDesc').value,
+    lotPrice: document.getElementById('lotPrice').value,
+    lotAddress: document.getElementById('lotAddress').value,
+    commission: document.getElementById('commission').value,
+    cellphone: document.getElementById('cellphone').value,
+    messenger: document.getElementById('messenger').value,
+    remarks: document.getElementById('remarks').value,
+    images: []
   };
-  const idx=document.getElementById('editIndex').value;
-  if(idx===''){ records.push(rec); } else { records[idx]=rec; document.getElementById('editIndex').value=''; }
-  saveAll(); renderAll(); this.reset(); 
+
+  if(fileInput.files.length){
+    const files = Array.from(fileInput.files).slice(0,3);
+    let loaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e){
+        rec.images.push(e.target.result);
+        loaded++;
+        if(loaded === files.length){
+          saveOrUpdateRecord(rec);
+        }
+      }
+      reader.readAsDataURL(file);
+    });
+  } else {
+    saveOrUpdateRecord(rec);
+  }
+});
+
+function saveOrUpdateRecord(rec){
+  const idx = document.getElementById('editIndex').value;
+  if(idx===''){
+    records.push(rec);
+  } else {
+    records[idx] = rec;
+    document.getElementById('editIndex').value='';
+  }
+  saveAll();
+  renderAll();
+  document.getElementById('trackerForm').reset();
   document.getElementById('trackerForm').style.display='none';
   document.getElementById('toggleFormBtn').textContent='➕ Add Record';
-});
+}
 
 /* --- Edit/Delete/Archive/Restore --- */
 function editRecord(i){ 
   const r=records[i];
   if(!r) return alert('Record not found');
-  // populate form fields
+
   document.getElementById('ownerName').value=r.ownerName;
   document.getElementById('agentName').value=r.agentName;
   document.getElementById('sqm').value=r.sqm;
@@ -207,20 +227,14 @@ function editRecord(i){
   document.getElementById('remarks').value=r.remarks;
   document.getElementById('editIndex').value=i;
 
-  // show form and update toggle text
   const form = document.getElementById('trackerForm');
   form.style.display='block';
   document.getElementById('toggleFormBtn').textContent='➖ Hide Form';
 
-  // scroll to the form and focus the first input, plus a quick flash so user sees it immediately
-  // scroll
   form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  // focus (slight delay helps on some mobile browsers)
   setTimeout(()=> {
     document.getElementById('ownerName').focus();
-    // trigger flash animation
     form.classList.remove('flash');
-    // force reflow to restart animation
     void form.offsetWidth;
     form.classList.add('flash');
   }, 120);
@@ -240,6 +254,31 @@ Lot Price: ${r.lotPrice}
 Lot Address: ${r.lotAddress}
 Remarks: ${r.remarks}`;
   navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard'));
+}
+
+/* --- Preview Multiple Pictures with Share --- */
+function previewPictures(i){
+  const r = records[i];
+  if(!r || !r.images || r.images.length===0) return alert('No pictures available');
+  
+  const win = window.open('', '_blank', 'width=500,height=600,scrollbars=yes');
+  win.document.write('<h3>Preview Images</h3>');
+  r.images.forEach(img => {
+    win.document.write(`<img src="${img}" style="width:100%; margin-bottom:10px;">`);
+  });
+  win.document.write(`<button onclick="shareImages()">Share to Messenger</button>`);
+  
+  win.document.write(`
+    <script>
+      function shareImages(){
+        const urls = ${JSON.stringify(r.images)};
+        urls.forEach(url => {
+          const messengerUrl = 'https://www.messenger.com/t/?link=' + encodeURIComponent(url);
+          window.open(messengerUrl,'_blank');
+        });
+      }
+    <\/script>
+  `);
 }
 
 /* --- Search Filter --- */
@@ -266,7 +305,6 @@ document.getElementById('toggleFormBtn').addEventListener('click', function(){
   if(form.style.display==='none' || form.style.display===''){
     form.style.display='block';
     this.textContent='➖ Hide Form';
-    // optional: scroll to form when toggled open
     setTimeout(()=> form.scrollIntoView({behavior:'smooth', block:'center'}), 80);
   } else {
     form.style.display='none';
@@ -277,7 +315,6 @@ document.getElementById('toggleFormBtn').addEventListener('click', function(){
 /* --- Bootstrap --- */
 loadAll();
 renderAll();
-// keep form hidden on initial load
 document.getElementById('trackerForm').style.display='none';
 </script>
 </body>
